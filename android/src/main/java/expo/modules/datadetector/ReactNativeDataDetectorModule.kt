@@ -7,10 +7,30 @@ import com.google.mlkit.nl.entityextraction.EntityExtractorOptions
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 class ReactNativeDataDetectorModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("ReactNativeDataDetector")
+
+    AsyncFunction("downloadModel") { promise: Promise ->
+      val options = EntityExtractorOptions.Builder(EntityExtractorOptions.ENGLISH)
+        .build()
+      val extractor = EntityExtraction.getClient(options)
+
+      extractor.downloadModelIfNeeded()
+        .addOnSuccessListener {
+          promise.resolve(true)
+          extractor.close()
+        }
+        .addOnFailureListener { e ->
+          promise.reject("MODEL_DOWNLOAD_ERROR", e.message ?: "Failed to download ML Kit model", e)
+          extractor.close()
+        }
+    }
 
     AsyncFunction("detect") { text: String, types: List<String>, promise: Promise ->
       val options = EntityExtractorOptions.Builder(EntityExtractorOptions.ENGLISH)
@@ -85,7 +105,9 @@ class ReactNativeDataDetectorModule : Module() {
       "address" -> data["address"] = annotatedText
       "date" -> {
         entity.asDateTimeEntity()?.let { dateTime ->
-          data["timestamp"] = dateTime.timestampMillis.toString()
+          val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
+          formatter.timeZone = TimeZone.getTimeZone("UTC")
+          data["date"] = formatter.format(Date(dateTime.timestampMillis))
         }
       }
     }

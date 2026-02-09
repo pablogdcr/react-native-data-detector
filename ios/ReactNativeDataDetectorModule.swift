@@ -5,6 +5,11 @@ public class ReactNativeDataDetectorModule: Module {
   public func definition() -> ModuleDefinition {
     Name("ReactNativeDataDetector")
 
+    // No-op on iOS — NSDataDetector requires no model download
+    AsyncFunction("downloadModel") { () -> Bool in
+      return true
+    }
+
     AsyncFunction("detect") { (text: String, types: [String]) -> [[String: Any]] in
       var checkingTypes: NSTextCheckingResult.CheckingType = []
 

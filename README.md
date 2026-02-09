@@ -8,7 +8,7 @@ Cross-platform text data detection for React Native. Uses **NSDataDetector** on 
 - **URLs** — Detect web links
 - **Emails** — Detect email addresses
 - **Addresses** — Detect street addresses with parsed components (iOS)
-- **Dates** — Detect dates and times with ISO 8601 output (iOS) / timestamps (Android)
+- **Dates** — Detect dates and times with ISO 8601 output
 - **Native accuracy** — Uses battle-tested platform APIs instead of regex
 - **Expo Modules API** — Built with the modern Expo native module system
 
@@ -26,12 +26,15 @@ npx pod-install
 
 ### Android
 
-The ML Kit entity extraction model (~5.6MB) is downloaded on first use. No additional setup is required.
+The ML Kit entity extraction model (~5.6MB) is downloaded on the user's device at runtime. You can control when this happens using [`downloadModel()`](#downloadmodel) — for example, calling it at app startup to ensure `detect()` works offline later. If you don't call it explicitly, the model will be downloaded automatically on the first `detect()` call.
 
 ## Usage
 
 ```typescript
-import { detect } from 'react-native-data-detector';
+import { detect, downloadModel } from 'react-native-data-detector';
+
+// Pre-download the ML Kit model at app startup (Android only, no-op on iOS)
+await downloadModel();
 
 // Detect all entity types
 const entities = await detect('Call me at 555-1234 or email john@example.com');
@@ -50,6 +53,19 @@ const phones = await detect('Call 555-1234 or visit https://example.com', {
 ```
 
 ## API
+
+### `downloadModel()`
+
+Pre-downloads the ML Kit entity extraction model on Android. On iOS, this is a no-op that resolves immediately — `NSDataDetector` is built into the OS and requires no model download.
+
+Call this at app startup or before the first `detect()` call to ensure the model is available offline.
+
+**Returns:** `Promise<boolean>` — `true` when the model is ready.
+
+| Platform | Behavior |
+|----------|----------|
+| **iOS** | No-op, resolves `true` immediately |
+| **Android** | Downloads the ML Kit model (~5.6MB) if not already cached. Requires internet on first call. |
 
 ### `detect(text, options?)`
 
@@ -90,16 +106,17 @@ Detects entities in the given text using native platform APIs.
 | `link` | `{ url }` |
 | `email` | `{ email }` |
 | `address` | `{ street, city, state, zip, country }` (iOS) / `{ address }` (Android) |
-| `date` | `{ date }` ISO 8601 string (iOS) / `{ timestamp }` milliseconds (Android) |
+| `date` | `{ date }` ISO 8601 string |
 
 ## Platform Differences
 
 | Feature | iOS | Android |
 |---------|-----|---------|
 | Engine | NSDataDetector | ML Kit Entity Extraction |
-| Offline | Always | After first model download |
+| Offline | Always | After `downloadModel()` or first `detect()` call |
+| Model download | Not needed | ~5.6MB, on-device at runtime |
 | Address parsing | Structured components | Raw string |
-| Date output | ISO 8601 | Timestamp (ms) |
+| Date output | ISO 8601 | ISO 8601 |
 
 ## Requirements
 
