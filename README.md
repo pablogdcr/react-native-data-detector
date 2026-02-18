@@ -21,7 +21,7 @@ Cross-platform text data detection for React Native. Uses **NSDataDetector** on 
 ## Installation
 
 ```bash
-npm install react-native-data-detector
+npm install @themobilefirstcompany/react-native-data-detector
 ```
 
 ### iOS
@@ -37,7 +37,7 @@ The ML Kit entity extraction model (~5.6MB) is downloaded on the user's device a
 ## Usage
 
 ```typescript
-import { detect, downloadModel } from 'react-native-data-detector';
+import { detect, downloadModel } from '@themobilefirstcompany/react-native-data-detector';
 
 // Pre-download the ML Kit model at app startup (Android only, no-op on iOS)
 await downloadModel();
