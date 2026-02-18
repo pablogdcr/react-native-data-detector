@@ -15,13 +15,13 @@
     "address",
     "date"
   ],
-  "homepage": "https://github.com/pablogdcr/react-native-data-detector#readme",
+  "homepage": "https://github.com/themobilefirstco/react-native-data-detector#readme",
   "bugs": {
-    "url": "https://github.com/pablogdcr/react-native-data-detector/issues"
+    "url": "https://github.com/themobilefirstco/react-native-data-detector/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pablogdcr/react-native-data-detector.git"
+    "url": "git+https://github.com/themobilefirstco/react-native-data-detector.git"
   },
   "license": "MIT",
   "author": "pablogdcr",
