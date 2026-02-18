@@ -1,9 +1,11 @@
 # react-native-data-detector
 
+[![npm version](https://img.shields.io/npm/v/@themobilefirstcompany/react-native-data-detector)](https://www.npmjs.com/package/@themobilefirstcompany/react-native-data-detector)
+
 Cross-platform text data detection for React Native. Uses **NSDataDetector** on iOS and **ML Kit Entity Extraction** on Android to detect phone numbers, URLs, emails, dates, and addresses — returning structured results to JavaScript.
 
 <p align="center">
-  <img src="data-collector.png" alt="Data Detector Example" width="500" />
+  <img src="data-detector.png" alt="Data Detector Example" width="500" />
 </p>
 
 ## Features

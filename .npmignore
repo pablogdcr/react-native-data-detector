@@ -4,5 +4,6 @@ __tests__
 babel.config.js
 tsconfig.json
 example/
+*.png
 .github/
 .claude/
