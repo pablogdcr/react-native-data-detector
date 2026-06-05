@@ -13,7 +13,8 @@ android {
   compileSdkVersion safeExtGet("compileSdkVersion", 34)
 
   defaultConfig {
-    minSdkVersion safeExtGet("minSdkVersion", 24)
+    // ML Kit Entity Extraction (com.google.mlkit:entity-extraction) requires minSdk 26.
+    minSdkVersion safeExtGet("minSdkVersion", 26)
     targetSdkVersion safeExtGet("targetSdkVersion", 34)
   }
 

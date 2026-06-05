@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Corrected the minimum Android SDK to **API 26**. ML Kit Entity Extraction
+  (`entity-extraction:16.0.0-beta6`) declares `minSdk 26`, so apps at `minSdk 24`
+  failed to build (manifest merge). The library's declared `minSdkVersion` and the
+  README requirement are now `26`.
 - iOS: return UTF-16 offsets from `NSDataDetector` instead of grapheme-cluster
   distances, so `start`/`end` align with JavaScript string indices and Android's
   ML Kit char offsets. Previously mismatched on text containing emoji, accented,

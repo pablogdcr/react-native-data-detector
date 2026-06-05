@@ -9,11 +9,12 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "react-native-data-detector": "file:..",
     "expo": "~54.0.33",
+    "expo-build-properties": "~1.0.10",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",
-    "react-native": "0.81.5"
+    "react-native": "0.81.5",
+    "react-native-data-detector": "file:.."
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
