@@ -12,10 +12,10 @@ import {
   View,
 } from 'react-native';
 import {
-  detect,
-  downloadModel,
+  useDataDetector,
   type DetectedEntity,
   type DetectionType,
+  type ModelLanguage,
 } from 'react-native-data-detector';
 
 const SAMPLE_TEXT =
@@ -41,12 +41,25 @@ const TYPE_LABELS: Record<DetectionType, string> = {
   date: 'Date',
 };
 
+const LANGUAGES: ModelLanguage[] = ['en', 'fr', 'es', 'de', 'ja', 'zh'];
+
+const STATUS_LABELS: Record<string, string> = {
+  notDownloaded: 'Model not downloaded',
+  downloading: 'Downloading model…',
+  ready: 'Model ready',
+  error: 'Model error',
+};
+
 export default function App() {
   const [text, setText] = useState(SAMPLE_TEXT);
   const [selectedTypes, setSelectedTypes] = useState<Set<DetectionType>>(new Set(ALL_TYPES));
   const [results, setResults] = useState<DetectedEntity[]>([]);
   const [loading, setLoading] = useState(false);
-  const [modelStatus, setModelStatus] = useState<string | null>(null);
+  const [detectError, setDetectError] = useState<string | null>(null);
+  const [language, setLanguage] = useState<ModelLanguage>('en');
+
+  // The hook tracks model readiness and auto-downloads on Android.
+  const { detect, status, isReady, prepare, error } = useDataDetector({ language });
 
   const toggleType = (type: DetectionType) => {
     setSelectedTypes((prev) => {
@@ -60,26 +73,17 @@ export default function App() {
     });
   };
 
-  const handleDownloadModel = async () => {
-    setModelStatus('Downloading…');
-    try {
-      const success = await downloadModel();
-      setModelStatus(success ? 'Model ready' : 'No download needed');
-    } catch (e: any) {
-      setModelStatus(`Error: ${e.message}`);
-    }
-  };
-
   const handleDetect = async () => {
     if (!text.trim()) return;
     setLoading(true);
+    setDetectError(null);
     try {
       const types = Array.from(selectedTypes);
       const entities = await detect(text, types.length < ALL_TYPES.length ? { types } : undefined);
       setResults(entities);
     } catch (e: any) {
       setResults([]);
-      setModelStatus(`Detection error: ${e.message}`);
+      setDetectError(`Detection error: ${e.message}`);
     } finally {
       setLoading(false);
     }
@@ -96,10 +100,34 @@ export default function App() {
 
         {Platform.OS === 'android' && (
           <View style={styles.section}>
-            <Pressable style={styles.downloadButton} onPress={handleDownloadModel}>
-              <Text style={styles.downloadButtonText}>Download Model (Android)</Text>
-            </Pressable>
-            {modelStatus && <Text style={styles.statusText}>{modelStatus}</Text>}
+            <Text style={styles.label}>Language Model</Text>
+            <View style={styles.chips}>
+              {LANGUAGES.map((lang) => {
+                const active = language === lang;
+                return (
+                  <Pressable
+                    key={lang}
+                    style={[styles.chip, styles.langChip, active && styles.langChipActive]}
+                    onPress={() => setLanguage(lang)}
+                  >
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                      {lang.toUpperCase()}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <View style={styles.statusRow}>
+              {status === 'downloading' && <ActivityIndicator size="small" color="#8E8E93" />}
+              <Text style={styles.statusText}>
+                {error ? `Error: ${error.message}` : (STATUS_LABELS[status] ?? status)}
+              </Text>
+            </View>
+            {status === 'error' && (
+              <Pressable style={styles.downloadButton} onPress={() => prepare().catch(() => {})}>
+                <Text style={styles.downloadButtonText}>Retry Download</Text>
+              </Pressable>
+            )}
           </View>
         )}
 
@@ -139,16 +167,20 @@ export default function App() {
         </View>
 
         <Pressable
-          style={[styles.detectButton, loading && styles.detectButtonDisabled]}
+          style={[styles.detectButton, (loading || !isReady) && styles.detectButtonDisabled]}
           onPress={handleDetect}
-          disabled={loading}
+          disabled={loading || !isReady}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.detectButtonText}>Detect Entities</Text>
+            <Text style={styles.detectButtonText}>
+              {isReady ? 'Detect Entities' : 'Preparing model…'}
+            </Text>
           )}
         </Pressable>
+
+        {detectError && <Text style={styles.errorText}>{detectError}</Text>}
 
         {results.length > 0 && (
           <View style={styles.section}>
@@ -273,11 +305,30 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 10,
+  },
   statusText: {
     fontSize: 13,
     color: '#8E8E93',
-    marginTop: 6,
     textAlign: 'center',
+  },
+  errorText: {
+    fontSize: 13,
+    color: '#FF3B30',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  langChip: {
+    borderColor: '#C7C7CC',
+  },
+  langChipActive: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
   },
   card: {
     backgroundColor: '#fff',

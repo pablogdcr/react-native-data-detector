@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `useDataDetector` hook — tracks model readiness (`status`/`isReady`/`error`),
+  exposes `detect`, and auto-downloads the model on Android (opt out with
+  `autoPrepare: false`).
+- `getModelStatus()` and `isModelReady()` to query whether a language model is
+  downloaded. On iOS both always report ready.
+- Multi-language support on Android: `detect`, `prepareModel`, `getModelStatus`,
+  `isModelReady`, and `useDataDetector` all accept a `language` option (ISO 639-1
+  code) selecting one of 15 ML Kit models. Defaults to `'en'`. Ignored on iOS.
+
+### Changed
+
+- Renamed `downloadModel()` to `prepareModel()` — clearer intent and now accepts a
+  `{ language }` option. `downloadModel()` remains as a deprecated alias (targets
+  the default `'en'` model) and will be removed in a future major version.
+- Ship an explicit `files` allowlist in `package.json` and drop the stale
+  `.npmignore`; development config (ESLint, Prettier, EditorConfig, CONTRIBUTING)
+  is no longer included in the published tarball.
+- README hero image now uses an absolute URL so it renders on npmjs.com.
+
 ### Fixed
 
 - iOS: return UTF-16 offsets from `NSDataDetector` instead of grapheme-cluster
@@ -15,13 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   or non-BMP characters.
 - Android: read the library version from `package.json` instead of a hardcoded
   value, so `build.gradle` can no longer drift from the published version.
-
-### Changed
-
-- Ship an explicit `files` allowlist in `package.json` and drop the stale
-  `.npmignore`; development config (ESLint, Prettier, EditorConfig, CONTRIBUTING)
-  is no longer included in the published tarball.
-- README hero image now uses an absolute URL so it renders on npmjs.com.
 
 ## [0.2.0]
 

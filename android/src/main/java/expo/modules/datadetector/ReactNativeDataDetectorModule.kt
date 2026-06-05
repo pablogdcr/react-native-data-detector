@@ -1,8 +1,10 @@
 package expo.modules.datadetector
 
+import com.google.mlkit.common.model.RemoteModelManager
 import com.google.mlkit.nl.entityextraction.Entity
 import com.google.mlkit.nl.entityextraction.EntityExtraction
 import com.google.mlkit.nl.entityextraction.EntityExtractionParams
+import com.google.mlkit.nl.entityextraction.EntityExtractionRemoteModel
 import com.google.mlkit.nl.entityextraction.EntityExtractorOptions
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.modules.Module
@@ -16,9 +18,8 @@ class ReactNativeDataDetectorModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("ReactNativeDataDetector")
 
-    AsyncFunction("downloadModel") { promise: Promise ->
-      val options = EntityExtractorOptions.Builder(EntityExtractorOptions.ENGLISH)
-        .build()
+    AsyncFunction("prepareModel") { language: String, promise: Promise ->
+      val options = EntityExtractorOptions.Builder(modelIdentifierFor(language)).build()
       val extractor = EntityExtraction.getClient(options)
 
       extractor.downloadModelIfNeeded()
@@ -32,9 +33,20 @@ class ReactNativeDataDetectorModule : Module() {
         }
     }
 
-    AsyncFunction("detect") { text: String, types: List<String>, promise: Promise ->
-      val options = EntityExtractorOptions.Builder(EntityExtractorOptions.ENGLISH)
-        .build()
+    AsyncFunction("getModelStatus") { language: String, promise: Promise ->
+      val model = EntityExtractionRemoteModel.Builder(modelIdentifierFor(language)).build()
+
+      RemoteModelManager.getInstance().isModelDownloaded(model)
+        .addOnSuccessListener { downloaded ->
+          promise.resolve(if (downloaded) "ready" else "notDownloaded")
+        }
+        .addOnFailureListener { e ->
+          promise.reject("MODEL_STATUS_ERROR", e.message ?: "Failed to read ML Kit model status", e)
+        }
+    }
+
+    AsyncFunction("detect") { text: String, types: List<String>, language: String, promise: Promise ->
+      val options = EntityExtractorOptions.Builder(modelIdentifierFor(language)).build()
       val extractor = EntityExtraction.getClient(options)
 
       extractor.downloadModelIfNeeded()
@@ -78,6 +90,32 @@ class ReactNativeDataDetectorModule : Module() {
           promise.reject("MODEL_DOWNLOAD_ERROR", e.message ?: "Failed to download ML Kit model", e)
           extractor.close()
         }
+    }
+  }
+
+  /**
+   * Maps an ISO 639-1 language code from JavaScript to its ML Kit
+   * [EntityExtractorOptions] model identifier. Falls back to English for
+   * unknown codes so detection still works.
+   */
+  private fun modelIdentifierFor(language: String): String {
+    return when (language) {
+      "ar" -> EntityExtractorOptions.ARABIC
+      "nl" -> EntityExtractorOptions.DUTCH
+      "en" -> EntityExtractorOptions.ENGLISH
+      "fr" -> EntityExtractorOptions.FRENCH
+      "de" -> EntityExtractorOptions.GERMAN
+      "it" -> EntityExtractorOptions.ITALIAN
+      "ja" -> EntityExtractorOptions.JAPANESE
+      "ko" -> EntityExtractorOptions.KOREAN
+      "pl" -> EntityExtractorOptions.POLISH
+      "pt" -> EntityExtractorOptions.PORTUGUESE
+      "ru" -> EntityExtractorOptions.RUSSIAN
+      "es" -> EntityExtractorOptions.SPANISH
+      "th" -> EntityExtractorOptions.THAI
+      "tr" -> EntityExtractorOptions.TURKISH
+      "zh" -> EntityExtractorOptions.CHINESE
+      else -> EntityExtractorOptions.ENGLISH
     }
   }
 

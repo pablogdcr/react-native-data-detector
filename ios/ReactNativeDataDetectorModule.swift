@@ -5,12 +5,19 @@ public class ReactNativeDataDetectorModule: Module {
   public func definition() -> ModuleDefinition {
     Name("ReactNativeDataDetector")
 
-    // No-op on iOS — NSDataDetector requires no model download
-    AsyncFunction("downloadModel") { () -> Bool in
+    // No-op on iOS — NSDataDetector requires no model download.
+    // The `language` argument exists for API parity with Android and is ignored.
+    AsyncFunction("prepareModel") { (_: String) -> Bool in
       return true
     }
 
-    AsyncFunction("detect") { (text: String, types: [String]) -> [[String: Any]] in
+    // NSDataDetector is always available, so the model is always ready.
+    AsyncFunction("getModelStatus") { (_: String) -> String in
+      return "ready"
+    }
+
+    // `language` is ignored — NSDataDetector is language-agnostic.
+    AsyncFunction("detect") { (text: String, types: [String], _: String) -> [[String: Any]] in
       var checkingTypes: NSTextCheckingResult.CheckingType = []
 
       for type in types {
