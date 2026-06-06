@@ -16,7 +16,7 @@ Cross-platform text data detection for React Native. Uses **NSDataDetector** on 
 - **Addresses** — Detect street addresses with parsed components (iOS)
 - **Dates** — Detect dates and times with ISO 8601 output
 - **Native accuracy** — Uses battle-tested platform APIs instead of regex
-- **React hook** — [`useDataDetector`](#usedatadetectoroptions) tracks model readiness and auto-downloads on Android
+- **React hooks** — `useDataDetector` (imperative) and `useDetectedEntities` (reactive, as-you-type); both track model readiness and auto-download on Android
 - **Multiple languages** — Choose from 15 ML Kit language models on Android
 - **Expo Modules API** — Built with the modern Expo native module system
 
@@ -65,10 +65,17 @@ const phones = await detect('Call 555-1234 or visit https://example.com', {
 const fr = await detect('Appelez-moi au 01 23 45 67 89', { language: 'fr' });
 ```
 
-### Hook
+### Hooks
 
-The `useDataDetector` hook tracks model readiness and, on Android, downloads the
-model automatically on mount. On iOS the model is always ready.
+There are two hooks for two situations:
+
+- **`useDataDetector`** — *imperative*. Tracks model readiness and hands you a
+  `detect` function you call yourself (e.g. once per chat message).
+- **`useDetectedEntities`** — *reactive*. Pass it a (changing) string and it returns
+  the detected entities, debounced and recomputed as the text changes — ideal for
+  as-you-type input.
+
+Both download the model automatically on Android and are no-ops on iOS (always ready).
 
 ```tsx
 import { useDataDetector } from 'react-native-data-detector';
@@ -84,6 +91,22 @@ function MyComponent() {
   // status: 'notDownloaded' | 'downloading' | 'ready' | 'error'
   if (!isReady) return <Text>Preparing model… ({status})</Text>;
   // …
+}
+```
+
+```tsx
+import { useDetectedEntities } from 'react-native-data-detector';
+
+function LiveInput() {
+  const [text, setText] = useState('');
+  const { entities, isDetecting } = useDetectedEntities(text, { debounceMs: 250 });
+
+  return (
+    <>
+      <TextInput value={text} onChangeText={setText} />
+      <Text>{entities.length} detected{isDetecting ? '…' : ''}</Text>
+    </>
+  );
 }
 ```
 
@@ -144,6 +167,30 @@ React hook that tracks model availability and, on Android, downloads the languag
 | `status` | `ModelStatus` | `'notDownloaded' \| 'downloading' \| 'ready' \| 'error'`. |
 | `isReady` | `boolean` | `true` when `status === 'ready'`. |
 | `error` | `Error \| null` | The last preparation error, or `null`. |
+
+### `useDetectedEntities(text, options?)`
+
+Reactive hook: pass a (changing) string and get back the detected entities, recomputed as the text changes. Debounced and cancellation-safe (the latest text wins), so it suits as-you-type input. Manages model readiness internally.
+
+**Parameters:**
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `text` | `string` | — | The text to detect entities in. |
+| `options.debounceMs` | `number` | `300` | Debounce applied to `text` before detecting. |
+| `options.types` | `DetectionType[]` | All types | Which entity types to detect. |
+| `options.language` | `ModelLanguage` | `'en'` | Which language model to use (Android only). |
+| `options.enabled` | `boolean` | `true` | When `false`, detection pauses and the last result is kept. |
+| `options.autoPrepare` | `boolean` | `true` | Download the model on mount if needed (Android). |
+
+**Returns:** `UseDetectedEntitiesResult`
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `entities` | `DetectedEntity[]` | Entities detected in the debounced `text`. |
+| `isDetecting` | `boolean` | `true` while a detection for the latest text is in flight. |
+| `status` | `ModelStatus` | Current model download state. |
+| `error` | `Error \| null` | The last detection or model error, or `null`. |
 
 ### `downloadModel()`
 

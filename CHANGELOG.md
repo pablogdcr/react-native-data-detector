@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `useDetectedEntities(text, options?)` hook — reactive, debounced detection of a
+  changing string (as-you-type). Returns `{ entities, isDetecting, status, error }`,
+  is cancellation-safe (latest text wins), and manages model readiness internally.
 - `useDataDetector` hook — tracks model readiness (`status`/`isReady`/`error`),
   exposes `detect`, and auto-downloads the model on Android (opt out with
   `autoPrepare: false`).
