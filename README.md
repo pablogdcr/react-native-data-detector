@@ -192,10 +192,6 @@ Reactive hook: pass a (changing) string and get back the detected entities, reco
 | `status` | `ModelStatus` | Current model download state. |
 | `error` | `Error \| null` | The last detection or model error, or `null`. |
 
-### `downloadModel()`
-
-> **Deprecated since 0.3.0** — use [`prepareModel()`](#preparemodeloptions) instead. Kept as an alias (always targets the default `'en'` model) and will be removed in a future major version.
-
 ### `detect(text, options?)`
 
 Detects entities in the given text using native platform APIs.
@@ -240,11 +236,15 @@ Detects entities in the given text using native platform APIs.
 
 ## Supported Languages
 
-The `language` option selects which **Android** ML Kit model is used. It is a no-op on iOS, where `NSDataDetector` is language-agnostic.
+The `language` option (type `ModelLanguage`) selects which **Android** ML Kit model is used. It is a no-op on iOS, where `NSDataDetector` is language-agnostic. Each language is a separate ~5.6MB on-device model, downloaded on demand.
 
-`ModelLanguage`: `'ar'` (Arabic), `'nl'` (Dutch), `'en'` (English), `'fr'` (French), `'de'` (German), `'it'` (Italian), `'ja'` (Japanese), `'ko'` (Korean), `'pl'` (Polish), `'pt'` (Portuguese), `'ru'` (Russian), `'es'` (Spanish), `'th'` (Thai), `'tr'` (Turkish), `'zh'` (Chinese).
-
-Each language is a separate ~5.6MB on-device model, downloaded on demand.
+| Code | Language | Code | Language   | Code | Language |
+| ---- | -------- | ---- | ---------- | ---- | -------- |
+| `ar` | Arabic   | `it` | Italian    | `ru` | Russian  |
+| `nl` | Dutch    | `ja` | Japanese   | `es` | Spanish  |
+| `en` | English  | `ko` | Korean     | `th` | Thai     |
+| `fr` | French   | `pl` | Polish     | `tr` | Turkish  |
+| `de` | German   | `pt` | Portuguese | `zh` | Chinese  |
 
 ## Platform Differences
 
