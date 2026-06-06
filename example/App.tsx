@@ -187,6 +187,7 @@ export default function App() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
+              style={styles.stripScroll}
               contentContainerStyle={styles.strip}
               keyboardShouldPersistTaps="handled"
             >
@@ -279,7 +280,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: Platform.OS === 'android' ? 44 : 12,
-    paddingBottom: 16,
+    // Extra bottom gap so the input clears the Android gesture bar / home indicator
+    // when the keyboard is closed.
+    paddingBottom: Platform.OS === 'android' ? 32 : 24,
   },
   header: { marginBottom: 20 },
   title: { fontSize: 30, fontWeight: '800', color: C.text, letterSpacing: -0.5 },
@@ -342,7 +345,10 @@ const styles = StyleSheet.create({
   },
   emptyText: { color: C.muted, fontSize: 13 },
 
-  strip: { gap: 10, paddingRight: 4 },
+  // Full-bleed: cancel the body's horizontal padding so chips scroll to the screen
+  // edge, then re-apply it inside the content so the first/last chips stay aligned.
+  stripScroll: { marginHorizontal: -20 },
+  strip: { gap: 10, paddingHorizontal: 20 },
   entityChip: {
     backgroundColor: C.surface,
     borderWidth: 1,
