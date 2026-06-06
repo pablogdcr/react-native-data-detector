@@ -6,20 +6,20 @@ const monorepoRoot = path.resolve(projectRoot, '..');
 
 const config = getDefaultConfig(projectRoot);
 
-// Watch the parent directory so Metro can resolve the file:.. dependency
+// Watch the repo root so Metro picks up changes to the linked
+// `react-native-data-detector` package (a `file:..` dependency).
 config.watchFolders = [monorepoRoot];
 
-// Ensure Metro resolves from the example's node_modules first
+// Resolve from the example's node_modules first, then the repo root.
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(monorepoRoot, 'node_modules'),
 ];
 
-// The monorepo root also carries its own (newer) react / react-native, pulled in
-// by npm auto-installing the library's peerDependencies. Pin the singletons to the
-// example's copies so Metro and React Native codegen never mix versions — mixing
-// breaks native component codegen (e.g. "Unable to determine event arguments" in
-// VirtualViewNativeComponent).
+// The repo root carries its own, newer react / react-native (pulled in by the
+// library's peer + test dependencies). Pin the singletons to the example's copies
+// and block the root ones so Metro never mixes versions — mixing causes crashes
+// like "Property 'MessageQueue' doesn't exist".
 config.resolver.extraNodeModules = {
   react: path.resolve(projectRoot, 'node_modules/react'),
   'react-native': path.resolve(projectRoot, 'node_modules/react-native'),
