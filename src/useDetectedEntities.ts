@@ -53,58 +53,61 @@ export function useDetectedEntities(
   text: string,
   options?: UseDetectedEntitiesOptions,
 ): UseDetectedEntitiesResult {
+  const [entities, setEntities] = useState<DetectedEntity[]>([]);
+  const [isDetecting, setIsDetecting] = useState(false);
+  const [detectError, setDetectError] = useState<Error | null>(null);
+  const [debouncedText, setDebouncedText] = useState(text);
+
   const debounceMs = options?.debounceMs ?? 300;
   const language = options?.language ?? DEFAULT_LANGUAGE;
   const enabled = options?.enabled ?? true;
   const autoPrepare = options?.autoPrepare ?? true;
+
   const types = options?.types;
+  const typesKey = types?.join(',') ?? '';
 
   const { status, isReady, error: modelError } = useModelLifecycle(language, autoPrepare);
 
-  const [entities, setEntities] = useState<DetectedEntity[]>([]);
-  const [isDetecting, setIsDetecting] = useState(false);
-  const [detectError, setDetectError] = useState<Error | null>(null);
-
-  // Debounce the incoming text.
-  const [debouncedText, setDebouncedText] = useState(text);
-  useEffect(() => {
-    if (!enabled) return;
-    const id = setTimeout(() => setDebouncedText(text), debounceMs);
-    return () => clearTimeout(id);
-  }, [text, debounceMs, enabled]);
-
-  // `types` is an array; depend on a stable string key and read the latest value
-  // from a ref so a new array identity each render doesn't re-trigger detection.
-  const typesKey = types ? types.join(',') : '';
-  const typesRef = useRef(types);
-  typesRef.current = types;
-
-  // Monotonic id so only the most recent detection can commit its result.
   const runId = useRef(0);
 
   useEffect(() => {
-    if (!enabled || !isReady) return;
+    if (!enabled) {
+      return;
+    }
+    const id = setTimeout(() => setDebouncedText(text), debounceMs);
+
+    return () => clearTimeout(id);
+  }, [text, debounceMs, enabled]);
+
+  useEffect(() => {
+    if (!enabled || !isReady) {
+      return;
+    }
 
     if (!debouncedText) {
-      runId.current += 1; // invalidate any in-flight detection
+      runId.current += 1;
       setEntities([]);
       setIsDetecting(false);
       setDetectError(null);
       return;
     }
 
-    const myRun = ++runId.current;
+    const currentRunId = ++runId.current;
+
     setIsDetecting(true);
     setDetectError(null);
-
-    detectFn(debouncedText, { types: typesRef.current, language })
+    detectFn(debouncedText, { types, language })
       .then((res) => {
-        if (myRun !== runId.current) return; // a newer run superseded this one
+        if (currentRunId !== runId.current) {
+          return;
+        }
         setEntities(res);
         setIsDetecting(false);
       })
       .catch((e) => {
-        if (myRun !== runId.current) return;
+        if (currentRunId !== runId.current) {
+          return;
+        }
         setDetectError(e instanceof Error ? e : new Error(String(e)));
         setIsDetecting(false);
       });
