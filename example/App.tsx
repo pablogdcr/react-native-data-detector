@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import {
   useDataDetector,
+  useDetectedEntities,
   type DetectedEntity,
   type DetectionType,
   type ModelLanguage,
@@ -50,16 +51,39 @@ const STATUS_LABELS: Record<string, string> = {
   error: 'Model error',
 };
 
+type Mode = 'reactive' | 'imperative';
+
 export default function App() {
   const [text, setText] = useState(SAMPLE_TEXT);
   const [selectedTypes, setSelectedTypes] = useState<Set<DetectionType>>(new Set(ALL_TYPES));
-  const [results, setResults] = useState<DetectedEntity[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [detectError, setDetectError] = useState<string | null>(null);
   const [language, setLanguage] = useState<ModelLanguage>('en');
+  const [mode, setMode] = useState<Mode>('reactive');
 
-  // The hook tracks model readiness and auto-downloads on Android.
-  const { detect, status, isReady, prepare, error } = useDataDetector({ language });
+  const types = Array.from(selectedTypes);
+
+  // Imperative hook: model lifecycle (status/prepare) + a detect() you call yourself.
+  const { detect, status, isReady, prepare, error: modelError } = useDataDetector({ language });
+
+  // Reactive hook: debounced detection as `text` changes. Paused in imperative mode.
+  const {
+    entities: liveEntities,
+    isDetecting,
+    error: liveError,
+  } = useDetectedEntities(text, {
+    types,
+    language,
+    debounceMs: 250,
+    enabled: mode === 'reactive',
+  });
+
+  // Imperative-mode result state, populated by the Detect button.
+  const [tappedEntities, setTappedEntities] = useState<DetectedEntity[]>([]);
+  const [detecting, setDetecting] = useState(false);
+  const [tapError, setTapError] = useState<Error | null>(null);
+
+  const entities = mode === 'reactive' ? liveEntities : tappedEntities;
+  const busy = mode === 'reactive' ? isDetecting : detecting;
+  const detectionError = mode === 'reactive' ? liveError : tapError;
 
   const toggleType = (type: DetectionType) => {
     setSelectedTypes((prev) => {
@@ -74,18 +98,16 @@ export default function App() {
   };
 
   const handleDetect = async () => {
-    if (!text.trim()) return;
-    setLoading(true);
-    setDetectError(null);
+    setDetecting(true);
+    setTapError(null);
     try {
-      const types = Array.from(selectedTypes);
-      const entities = await detect(text, types.length < ALL_TYPES.length ? { types } : undefined);
-      setResults(entities);
+      const res = await detect(text, { types });
+      setTappedEntities(res);
     } catch (e: any) {
-      setResults([]);
-      setDetectError(`Detection error: ${e.message}`);
+      setTappedEntities([]);
+      setTapError(e instanceof Error ? e : new Error(String(e)));
     } finally {
-      setLoading(false);
+      setDetecting(false);
     }
   };
 
@@ -98,6 +120,7 @@ export default function App() {
           {Platform.OS === 'ios' ? 'NSDataDetector' : 'ML Kit Entity Extraction'}
         </Text>
 
+        {/* Model lifecycle: getModelStatus / isModelReady / prepareModel (Android). */}
         {Platform.OS === 'android' && (
           <View style={styles.section}>
             <Text style={styles.label}>Language Model</Text>
@@ -120,16 +143,43 @@ export default function App() {
             <View style={styles.statusRow}>
               {status === 'downloading' && <ActivityIndicator size="small" color="#8E8E93" />}
               <Text style={styles.statusText}>
-                {error ? `Error: ${error.message}` : (STATUS_LABELS[status] ?? status)}
+                {modelError ? `Error: ${modelError.message}` : (STATUS_LABELS[status] ?? status)}
               </Text>
             </View>
             {status === 'error' && (
-              <Pressable style={styles.downloadButton} onPress={() => prepare().catch(() => {})}>
-                <Text style={styles.downloadButtonText}>Retry Download</Text>
+              <Pressable style={styles.retryButton} onPress={() => prepare().catch(() => {})}>
+                <Text style={styles.retryButtonText}>Retry Download</Text>
               </Pressable>
             )}
           </View>
         )}
+
+        {/* Two hooks, two modes. */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Detection Mode</Text>
+          <View style={styles.segment}>
+            {(
+              [
+                ['reactive', 'As you type', 'useDetectedEntities'],
+                ['imperative', 'On tap', 'useDataDetector'],
+              ] as const
+            ).map(([value, title, sub]) => {
+              const active = mode === value;
+              return (
+                <Pressable
+                  key={value}
+                  style={[styles.segmentItem, active && styles.segmentItemActive]}
+                  onPress={() => setMode(value)}
+                >
+                  <Text style={[styles.segmentTitle, active && styles.segmentTitleActive]}>
+                    {title}
+                  </Text>
+                  <Text style={[styles.segmentSub, active && styles.segmentSubActive]}>{sub}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.label}>Input Text</Text>
@@ -138,7 +188,7 @@ export default function App() {
             value={text}
             onChangeText={setText}
             multiline
-            placeholder="Enter text to analyze…"
+            placeholder={mode === 'reactive' ? 'Start typing to detect…' : 'Enter text to analyze…'}
           />
         </View>
 
@@ -166,36 +216,47 @@ export default function App() {
           </View>
         </View>
 
-        <Pressable
-          style={[styles.detectButton, (loading || !isReady) && styles.detectButtonDisabled]}
-          onPress={handleDetect}
-          disabled={loading || !isReady}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.detectButtonText}>
-              {isReady ? 'Detect Entities' : 'Preparing model…'}
-            </Text>
-          )}
-        </Pressable>
+        {mode === 'imperative' && (
+          <Pressable
+            style={[styles.detectButton, (detecting || !isReady) && styles.detectButtonDisabled]}
+            onPress={handleDetect}
+            disabled={detecting || !isReady}
+          >
+            {detecting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.detectButtonText}>
+                {isReady ? 'Detect Entities' : 'Preparing model…'}
+              </Text>
+            )}
+          </Pressable>
+        )}
 
-        {detectError && <Text style={styles.errorText}>{detectError}</Text>}
+        {detectionError && (
+          <Text style={styles.errorText}>Error: {detectionError.message}</Text>
+        )}
 
-        {results.length > 0 && (
-          <View style={styles.section}>
+        <View style={styles.section}>
+          <View style={styles.resultsHeader}>
             <Text style={styles.label}>
-              Results ({results.length} {results.length === 1 ? 'entity' : 'entities'})
+              Results ({entities.length} {entities.length === 1 ? 'entity' : 'entities'})
             </Text>
-            {results.map((entity, index) => (
-              <View
-                key={index}
-                style={[styles.card, { borderLeftColor: TYPE_COLORS[entity.type] }]}
-              >
+            {busy && <ActivityIndicator size="small" color="#8E8E93" />}
+          </View>
+
+          {entities.length === 0 ? (
+            <Text style={styles.statusText}>
+              {status !== 'ready'
+                ? 'Preparing model…'
+                : mode === 'reactive'
+                  ? 'No entities — keep typing…'
+                  : 'Tap “Detect Entities” to analyze.'}
+            </Text>
+          ) : (
+            entities.map((entity, index) => (
+              <View key={index} style={[styles.card, { borderLeftColor: TYPE_COLORS[entity.type] }]}>
                 <View style={styles.cardHeader}>
-                  <View
-                    style={[styles.badge, { backgroundColor: TYPE_COLORS[entity.type] }]}
-                  >
+                  <View style={[styles.badge, { backgroundColor: TYPE_COLORS[entity.type] }]}>
                     <Text style={styles.badgeText}>{TYPE_LABELS[entity.type]}</Text>
                   </View>
                   <Text style={styles.range}>
@@ -213,9 +274,9 @@ export default function App() {
                   </View>
                 )}
               </View>
-            ))}
-          </View>
-        )}
+            ))
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -279,6 +340,40 @@ const styles = StyleSheet.create({
   chipTextActive: {
     color: '#fff',
   },
+  segment: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  segmentItem: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#E5E5EA',
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  segmentItemActive: {
+    borderColor: '#007AFF',
+    backgroundColor: '#007AFF',
+  },
+  segmentTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
+  },
+  segmentTitleActive: {
+    color: '#fff',
+  },
+  segmentSub: {
+    fontSize: 11,
+    color: '#8E8E93',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    marginTop: 2,
+  },
+  segmentSubActive: {
+    color: '#D6E6FF',
+  },
   detectButton: {
     backgroundColor: '#007AFF',
     borderRadius: 12,
@@ -294,13 +389,14 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
   },
-  downloadButton: {
+  retryButton: {
     backgroundColor: '#34C759',
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: 'center',
+    marginTop: 10,
   },
-  downloadButtonText: {
+  retryButtonText: {
     color: '#fff',
     fontSize: 15,
     fontWeight: '600',
@@ -329,6 +425,12 @@ const styles = StyleSheet.create({
   langChipActive: {
     backgroundColor: '#007AFF',
     borderColor: '#007AFF',
+  },
+  resultsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
   },
   card: {
     backgroundColor: '#fff',
