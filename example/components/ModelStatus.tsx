@@ -9,9 +9,15 @@ const LABELS: Record<string, string> = {
   notDownloaded: 'Model not downloaded',
 };
 
-/** Renders a subtle status line — nothing when the model is ready. */
-export function ModelStatus({ status }: { status: Status }) {
-  if (status === 'ready') return null;
+interface Props {
+  status: Status;
+}
+
+export function ModelStatus({ status }: Props) {
+  if (status === 'ready') {
+    return null;
+  }
+
   return (
     <View style={styles.row}>
       {status === 'downloading' && <ActivityIndicator size="small" color={C.muted} />}
@@ -21,6 +27,14 @@ export function ModelStatus({ status }: { status: Status }) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
-  text: { color: C.muted, fontSize: 13 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 12,
+  },
+  text: {
+    color: C.muted,
+    fontSize: 13,
+  },
 });

@@ -11,6 +11,7 @@ interface Props {
 
 export function LanguageButton({ language, onPress }: Props) {
   const name = LANGUAGES.find((l) => l.code === language)?.name ?? language;
+
   return (
     <Pressable style={styles.dropdown} onPress={onPress}>
       <Text style={styles.text}>{name}</Text>
@@ -31,6 +32,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 14,
   },
-  text: { color: C.text, fontSize: 14, fontWeight: '600' },
-  caret: { color: C.muted, fontSize: 11, marginTop: 1 },
+  text: {
+    color: C.text,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  caret: {
+    color: C.muted,
+    fontSize: 11,
+    marginTop: 1,
+  },
 });

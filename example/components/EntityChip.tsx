@@ -4,8 +4,13 @@ import type { DetectedEntity } from 'react-native-data-detector';
 import { TYPE_COLORS, TYPE_LABELS } from '../constants';
 import { C } from '../theme';
 
-export function EntityChip({ entity }: { entity: DetectedEntity }) {
+interface Props {
+  entity: DetectedEntity;
+}
+
+export function EntityChip({ entity }: Props) {
   const color = TYPE_COLORS[entity.type];
+
   return (
     <View style={styles.chip}>
       <View style={styles.head}>
@@ -33,8 +38,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 7,
   },
-  head: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  dot: { width: 7, height: 7, borderRadius: 4 },
-  type: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },
-  text: { color: C.text, fontSize: 15, fontWeight: '600' },
+  head: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  type: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  text: {
+    color: C.text,
+    fontSize: 15,
+    fontWeight: '600',
+  },
 });

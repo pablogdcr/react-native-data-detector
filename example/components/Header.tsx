@@ -14,8 +14,15 @@ export function Header() {
 }
 
 const styles = StyleSheet.create({
-  header: { marginBottom: 20 },
-  title: { fontSize: 30, fontWeight: '800', color: C.text, letterSpacing: -0.5 },
+  header: {
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: '800',
+    color: C.text,
+    letterSpacing: -0.5,
+  },
   subtitle: {
     fontSize: 13,
     color: C.muted,

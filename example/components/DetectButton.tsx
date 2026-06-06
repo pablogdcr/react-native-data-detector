@@ -10,6 +10,7 @@ interface Props {
 
 export function DetectButton({ detecting, isReady, onPress }: Props) {
   const disabled = detecting || !isReady;
+
   return (
     <Pressable
       style={[styles.button, disabled && styles.disabled]}
@@ -33,6 +34,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 12,
   },
-  disabled: { opacity: 0.5 },
-  text: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  disabled: {
+    opacity: 0.5,
+  },
+  text: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });

@@ -19,6 +19,7 @@ export function ModeToggle({ mode, onChange }: Props) {
     <View style={styles.toggle}>
       {OPTIONS.map(([value, label]) => {
         const active = mode === value;
+
         return (
           <Pressable
             key={value}
@@ -42,8 +43,20 @@ const styles = StyleSheet.create({
     borderColor: C.border,
     padding: 3,
   },
-  item: { paddingVertical: 7, paddingHorizontal: 16, borderRadius: 999 },
-  itemActive: { backgroundColor: C.accent },
-  text: { color: C.muted, fontSize: 13, fontWeight: '600' },
-  textActive: { color: '#fff' },
+  item: {
+    paddingVertical: 7,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+  },
+  itemActive: {
+    backgroundColor: C.accent,
+  },
+  text: {
+    color: C.muted,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  textActive: {
+    color: '#fff',
+  },
 });

@@ -50,7 +50,12 @@ export function DetectedList({ entities, busy, status, mode }: Props) {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
   label: {
     fontSize: 12,
     fontWeight: '700',
@@ -68,8 +73,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emptyText: { color: C.muted, fontSize: 13 },
-  // Full-bleed: cancel the screen padding so chips scroll to the edge, then
-  // re-apply it inside the content so the first/last chips stay aligned.
-  scroll: { marginHorizontal: -SCREEN_PADDING },
-  strip: { gap: 10, paddingHorizontal: SCREEN_PADDING },
+  scroll: {
+    marginHorizontal: -SCREEN_PADDING,
+  },
+  strip: {
+    gap: 10,
+    paddingHorizontal: SCREEN_PADDING,
+  },
 });

@@ -15,12 +15,12 @@ export function LanguageSheet({ visible, selected, onSelect, onClose }: Props) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
-        {/* Absorb taps so they don't fall through to the backdrop. */}
-        <Pressable style={styles.sheet} onPress={() => {}}>
+        <Pressable style={styles.sheet}>
           <Text style={styles.title}>Language model</Text>
-          <ScrollView style={styles.list}>
+          <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
             {LANGUAGES.map((l) => {
               const active = l.code === selected;
+
               return (
                 <Pressable key={l.code} style={styles.row} onPress={() => onSelect(l.code)}>
                   <Text style={[styles.rowText, active && styles.rowActive]}>{l.name}</Text>
@@ -36,14 +36,18 @@ export function LanguageSheet({ visible, selected, onSelect, onClose }: Props) {
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' },
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'flex-end',
+  },
   sheet: {
     backgroundColor: C.surfaceHi,
     borderTopLeftRadius: 22,
     borderTopRightRadius: 22,
     borderWidth: 1,
     borderColor: C.border,
-    paddingHorizontal: 16,
+    paddingHorizontal: 4,
     paddingTop: 18,
     paddingBottom: 32,
   },
@@ -56,7 +60,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     paddingHorizontal: 6,
   },
-  list: { maxHeight: 360 },
+  list: {
+    maxHeight: 360,
+  },
+  listContent: {
+    paddingHorizontal: 12,
+  },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -66,7 +75,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: C.border,
   },
-  rowText: { color: C.text, fontSize: 16 },
-  rowActive: { color: C.accent, fontWeight: '700' },
-  check: { color: C.accent, fontSize: 16, fontWeight: '700' },
+  rowText: {
+    color: C.text,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  rowActive: {
+    color: C.accent,
+    fontWeight: '700',
+  },
+  check: {
+    color: C.accent,
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });
