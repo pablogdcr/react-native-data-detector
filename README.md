@@ -15,7 +15,8 @@ Cross-platform text data detection for React Native. Uses **NSDataDetector** on 
 - **Emails** — Detect email addresses
 - **Addresses** — Detect street addresses with parsed components (iOS)
 - **Dates** — Detect dates and times with ISO 8601 output
-- **Native accuracy** — Uses battle-tested platform APIs instead of regex
+
+- **Native accuracy** — Uses native APIs instead of regex
 - **React hooks** — `useDataDetector` (imperative) and `useDetectedEntities` (reactive, as-you-type); both track model readiness and auto-download on Android
 - **Multiple languages** — Choose from 15 ML Kit language models on Android
 - **Expo Modules API** — Built with the modern Expo native module system
