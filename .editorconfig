@@ -12,3 +12,9 @@ indent_size = 4
 
 [*.md]
 trim_trailing_whitespace = false
+
+# Picked up natively by ktlint (no Gradle plugin required)
+[*.{kt,kts}]
+indent_size = 4
+ktlint_standard_no-wildcard-imports = enabled
+ktlint_standard_filename = disabled

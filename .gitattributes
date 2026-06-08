@@ -1,0 +1,18 @@
+# Normalize line endings on checkin
+* text=auto eol=lf
+
+# Binary assets — never normalize or diff
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.keystore binary
+
+# Keep generated lockfiles out of diffs and language stats
+package-lock.json -diff linguist-generated
+example/package-lock.json -diff linguist-generated
+
+# Don't let vendored/example/native code skew the repo language breakdown
+example/** linguist-vendored
+ios/** linguist-language=Swift
+android/** linguist-language=Kotlin

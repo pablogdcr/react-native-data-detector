@@ -28,6 +28,17 @@
   "type": "commonjs",
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./build/index.d.ts",
+      "default": "./build/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
   "files": [
     "src",
     "build",
